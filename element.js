@@ -3,7 +3,7 @@
     console.clear();
     const element = (tag, props = {}) => Object.assign(document.createElement(tag), props);
     const random = (min, max) => min + Math.floor(Math.random() * (max - min) + 1);
-    const flakecount = 15;
+    const flakecount = 1;
     const snowFlake = () => element("snow-flake");
     const addSnow = (flakes = snowFlake()) => document.body.append(...snowFlakes);
     const randomOffset = (offset) => random(-offset, offset);
