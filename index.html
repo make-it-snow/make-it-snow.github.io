@@ -4,10 +4,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A fun web page that demonstrates a 'make it snow' effect using web components.">
     <title>Make it snow</title>
-    <script src="element.js" defer></script>
+    <script src="element.js"></script>
     <style>
+        :root {
+            /* yes document CSS properties can style <snow-flake> too */
+            /* --size: 5; */
+            /* --color: gold; */
+            /* --speed: 1; */
+            /* --spikecount: 6; */
+        }
+
         body {
+            --textcolor: darkred;
+            --quotebackground: sandybrown;
             overflow: hidden;
             background-color: #666;
 
@@ -20,7 +31,8 @@
             display: block;
             z-index: 99999;
             position: relative;
-            text-shadow: -2px -2px 2px white;
+            text-shadow: 2px 2px 4px #000, -2px -2px 4px #fff;
+            color: var(--textcolor)
         }
 
         h1 {
@@ -32,16 +44,19 @@
         }
 
         h2 a {
-            color: firebrick
+            color: var(--textcolor)
         }
     </style>
     <style>
-        /* make-it-snow {
-                            --flakesize: 100px;
-                        } */
-    
+        make-it-snow {
+            /* --flakesize: 150px; */
+            /* --color: gold; */
+        }
+
         #flakes {
-            opacity: 0.2;
+            opacity: 0.1;
+            --size: 7;
+            --spikecount: 6;
         }
     </style>
 </head>
@@ -49,12 +64,14 @@
 <body>
     <h1>&lt;make-it-snow> &lt;/make-it-snow></h1>
 
-    <h2>DEV.to post: <a href="https://dev.to/dannyengelman/web-components-make-it-so-30gk">Web Components? Make it so!</a>
+    <h2>DEV.to post: <a href="https://dev.to/dannyengelman/web-components-make-it-so-30gk">Web Components? Make it
+            so!</a>
     </h2>
     <section id="flakes">
-        <snow-flake x="85" y="10" size="4" freeze></snow-flake>
-        <snow-flake x="20" y="50" size="4" freeze></snow-flake>
-        <snow-flake x="70" y="50" size="3" freeze></snow-flake>
+        <snow-flake x="35" y="10" freeze></snow-flake>
+        <snow-flake x="85" y="10" freeze></snow-flake>
+        <snow-flake x="15" y="60" freeze></snow-flake>
+        <snow-flake x="80" y="70" freeze></snow-flake>
     </section>
     <make-it-snow></make-it-snow>
 </body>

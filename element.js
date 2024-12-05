@@ -6,7 +6,7 @@
     new URLSearchParams(window.location.search).get(param);
 
   // ************************************************************************** configuration
-  const LOG = getUrlParam("log") == "1";
+  let LOG = getUrlParam("log") == "1";
   const _STARTFLAKECOUNT_ = ~~(getUrlParam("flakecount") || 300);
   const _ADDFLAKES_ = ~~(getUrlParam("addflakes") || 10);
   const _MAXFLAKES_ = ~~(getUrlParam("maxflakes") || 1000);
@@ -91,18 +91,21 @@
   customElements.define(
     _WC_SNOWFLAKE_,
     class extends HTMLElement {
-      // ====================================================================== constructor()
-      constructor() {
-        super().attachShadow({ mode: "open" });
-      }
       // ======================================================================
       // Getters and Setters, setters not really used in this code
       getAttributeUrl(attr) {
-        let value = this.getAttribute(attr) || getUrlParam(attr);
+        // get value from attribute OR URL parameter OR CSS property
+        let value = this.getAttribute(attr);
+        value = value || getUrlParam(attr);
+        value =
+          value || getComputedStyle(this).getPropertyValue(`--${attr}`).trim();
+
+        // if value indicates a - range, return random value between min and max
         if (value && value.includes("-")) {
           const [min, max] = value.split("-").map(Number);
           value = random(min, max);
         }
+        // if value is a comma separated list, return random value from Array
         if (value && value.includes(",")) {
           const values = value.split(",");
           value = random(values); // return random value from Array
@@ -152,6 +155,7 @@
       }
       // ====================================================================== connectedCallback()
       connectedCallback() {
+        this.attachShadow({ mode: "open" });
         if (LOG)
           console.log(
             `%c new <${_WC_SNOWFLAKE_}> `,
@@ -226,7 +230,10 @@
         this.y = y;
         this.shadowRoot.querySelector("#style").innerHTML =
           `#spike{stroke:${color}}` +
-          `:host{left:calc(${x}% - calc(var(--size) / 2));top:calc(${y}% - calc(var(--size) / 2))}`;
+          `:host{` +
+          `  left:calc(${x}% - calc(var(--size) / 2));` +
+          `  top :calc(${y}% - calc(var(--size) / 2))` +
+          `}`;
       }
 
       // ====================================================================== get/set for animation
@@ -327,7 +334,7 @@
             50
           )),
           (this.addflakecounter = createCountElement(
-            "new flakes per second: ",
+            "new <snow-flake> per second: ",
             90
           )),
           createElement("snowflake-quotes")
@@ -503,10 +510,16 @@
         // -------------------------------------------------------------------------- functions
         const quoted = (idx) =>
           `${idx + 1} of ${quotes.length}<br><br>` +
-          quotes[(current = idx)].replace("--", "<br><br>--");
+          quotes[(current = idx)].replace("--", "<br><br>-- ");
         const start = () => (interval = setInterval(() => next(), 7e3));
-        const next = () =>
-          (this.div.innerHTML = quoted((current + 1) % quotes.length));
+        const next = () => {
+          this.div.innerHTML = quoted((current + 1) % quotes.length);
+          // requestAnimationFrame(() => {
+          //   this.animdiv.style.width = "0";
+          //   this.animdiv.style.animation = "";
+          //   this.animdiv.style.animation = "grow 7s forwards";
+          // });
+        };
         // -------------------------------------------------------------------------- create HTML
         const createElement = (tag, props = {}) =>
           Object.assign(document.createElement(tag), props);
@@ -515,10 +528,17 @@
           createElement("style", {
             textContent:
               `:host{display:block;position:fixed;bottom:10px;left:10px;max-width:300px;` +
-              `background:beige;color:black;` +
-              `padding:10px;border-radius:5px;` +
-              `text-align:left;font:16px Arial}`,
+              `background:var(--quotebackground,beige);color:black;opacity:0.75;` +
+              `padding:10px;border-radius:5px;border:1px solid darkred;` +
+              `text-align:left;font:18px Arial}`,
           }),
+          // (this.animdiv = createElement("div", {
+          //   style: "height:2px;background:red;animation:grow 7s forwards",
+          //   textContent: " ",
+          // })),
+          // (this.anim = createElement("style", {
+          //   textContent: `@keyframes grow {from{width:0}to{width:100%}}`,
+          // })),
           (this.div = createElement("div", {
             innerHTML: quoted(0),
           }))
@@ -536,4 +556,38 @@
       // }
     }
   );
+  // ************************************************************************** Wake Lock API
+  let wakeLock = null;
+
+  const requestWakeLock = async () => {
+    try {
+      wakeLock = await navigator.wakeLock.request("screen");
+      console.log("Wake Lock is active");
+      wakeLock.addEventListener("release", () => {
+        console.log("Wake Lock was released");
+      });
+    } catch (err) {
+      if (LOG) console.error(`${err.name}, ${err.message}`);
+    }
+  };
+
+  const releaseWakeLock = () => {
+    if (wakeLock !== null) {
+      wakeLock.release().then(() => {
+        wakeLock = null;
+      });
+    }
+  };
+
+  // Request wake lock when the document is visible
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      requestWakeLock();
+    } else {
+      releaseWakeLock();
+    }
+  });
+
+  // Request wake lock initially
+  requestWakeLock();
 })(); // IIFE
