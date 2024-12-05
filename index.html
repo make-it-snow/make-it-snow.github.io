@@ -1,29 +1,61 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <title></title>
+    <title>Make it snow</title>
+    <script src="element.js" defer></script>
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            background: #000;
+            overflow: hidden;
+            background-color: #666;
+
+            font: 2.975vw Arial;
+            text-align: center;
+        }
+
+        h1,
+        h2 {
+            display: block;
+            z-index: 99999;
+            position: relative;
+            text-shadow: -2px -2px 2px white;
+        }
+
+        h1 {
+            margin-top: 30vh;
+        }
+
+        h2 {
+            font-size: 1em;
+        }
+
+        h2 a {
+            color: firebrick
         }
     </style>
-    <script type="module" src="elements/ice-crystal.js"></script>
-    <script type="module" src="element.js"></script>
-    <script type="module" src="//file-size.github.io/element.js"></script>
+    <style>
+        /* make-it-snow {
+                            --flakesize: 100px;
+                        } */
+    
+        #flakes {
+            opacity: 0.2;
+        }
+    </style>
 </head>
 
 <body>
-    <ice-crystal></ice-crystal>
-    <file-size gz src="https://make-it-snow.github.io/elements/ice-crystal.min.js"></file-size>
-    <script>
+    <h1>&lt;make-it-snow> &lt;/make-it-snow></h1>
 
-    </script>
+    <h2>DEV.to post: <a href="">Web Components? Make it so!</a></h2>
+    <section id="flakes">
+        <snow-flake x="85" y="10" size="4" freeze></snow-flake>
+        <snow-flake x="20" y="50" size="4" freeze></snow-flake>
+        <snow-flake x="70" y="50" size="3" freeze></snow-flake>
+    </section>
+    <make-it-snow></make-it-snow>
 </body>
 
 </html>
