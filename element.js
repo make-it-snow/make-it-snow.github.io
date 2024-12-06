@@ -36,28 +36,7 @@
   const _MAX_NEWFLAKE_TIMEOUT_ = ~~(getUrlParam("maxnewflaketimout") || 3000);
 
   const UIpadding = 5;
-  // -------------------------------------------------------------------------- user UI
   let _FPS_threshold_ = getUrlParam("fps") || 30;
-
-  // **************************************************************************
-  let settings = {
-    // snow-flake SVG paths
-    minstrokewidth: getUrlParam("minstrokewidth") || 3,
-    maxstrokewidth: getUrlParam("maxstrokewidth") || 9,
-
-    startflakecount: {
-      label: "Number of snowflakes to start with",
-      value: 300,
-    },
-    addflakecount: {
-      label: "Number of snowflakes to add per second",
-      value: 40,
-    },
-    animationspeed: {
-      label: "Animation speed",
-      value: [2, 20],
-    },
-  };
   // ========================================================================== GLOBAL variables
   let snowflakesCounter = 0; // number of snowflakes on screen
   let addflakeCounter = _ADDFLAKES_; // number of snowflakes to add when FPS is high enough
@@ -67,7 +46,7 @@
   // ========================================================================== Web Component settings
   // Web Component names
   const _WC_MAKEITSNOW_ = "make-it-snow";
-  const _WC_SNOWFLAKE_ = "snow-flake"; // ❄️
+  const _WC_SNOWFLAKE_ = "snow-flake"; // ❄️ Why can't we use emoji in Web Component names anymore?
 
   // random snow-flake color
   const snowcolors = [
@@ -127,7 +106,7 @@
           value = random(min, max);
         }
         // if value is a comma separated list, return random value from Array
-        if (value && value.includes(",")) {
+        else if (value && value.includes(",")) {
           const values = value.split(",");
           value = random(values); // return random value from Array
         }
@@ -151,7 +130,7 @@
       // ====================================================================== get y()
       // in 0 - 100 percentage range
       get y() {
-        return this.getAttribute("y") || random(-20, 0); // above top of screen
+        return this.getAttribute("y") || random(-1, 0); // above top of screen
       }
       set y(value) {
         this.setAttribute("y", value);
@@ -206,10 +185,7 @@
           // -------------------------------------------------------------------- create 3 spike <path>
           ["M70 70v-60", "M45 28l25 18l28-16", "M50 11l20 20l20-20"]
             .map((dpath) => {
-              let strokewidth = random(
-                settings.minstrokewidth,
-                settings.maxstrokewidth
-              );
+              let strokewidth = random(3, 9);
               let pathopacity = random(0.2, 1);
               return `<path opacity="${pathopacity}" stroke-width="${strokewidth}" d="${dpath}"/>`;
             })
