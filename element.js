@@ -1,4 +1,6 @@
 !(() => {
+  // favicon
+
   // IIFE so self-contained source can be copied into any other code
 
   // -------------------------------------------------------------------------- getUrlParam( param )
@@ -15,6 +17,7 @@
   const _SNOWFLAKESCALE_ = 0.5; // make size smaller
   const _MAX_NEWFLAKE_TIMEOUT_ = ~~(getUrlParam("maxnewflaketimout") || 3000);
 
+  const UIpadding = 5;
   // -------------------------------------------------------------------------- user UI
   let _FPS_threshold_ = getUrlParam("fps") || 30;
 
@@ -327,17 +330,22 @@
         // make sure this function is only called once, yes, a semaphore could have been used
         this.renderonce = () => {};
         // --------------------------------------------------------------------
+        let quotes =
+          getUrlParam("ui") == "no"
+            ? createElement("span") // empty span
+            : createElement("snowflake-quotes");
+        // --------------------------------------------------------------------
         document.body.append(
           createElement("frames-per-second", { id: "FPS" }),
           (this.flakecounter = createCountElement(
-            "Total <snow-flake> Web Components : ",
-            50
+            "<snow-flake> Web Components : ",
+            8 * UIpadding
           )),
           (this.addflakecounter = createCountElement(
             "new <snow-flake> per second: ",
-            90
+            15 * UIpadding
           )),
-          createElement("snowflake-quotes")
+          quotes
         );
         // --------------------------------------------------------------------
         // generate snowflakes on request
@@ -373,8 +381,8 @@
       connectedCallback() {
         this.attachShadow({ mode: "open" }).append(
           createSTYLEElement(
-            `:host{position:fixed;z-index:999;` +
-              `top:${this.top || 10}px;left:10px;` +
+            `:host{position:fixed;z-index:999;opacity:.7;` +
+              `top:${this.top || UIpadding}px;left:${UIpadding}px;` +
               `background:#000;color:#fff;` +
               `padding:5px;border-radius:5px;` +
               `font:18px arial}`
@@ -429,7 +437,7 @@
         const createFPSCounter = () => {
           return (counterElement = createCountElement(
             `animation FPS (threshold:${_FPS_threshold_}) : `,
-            10
+            UIpadding
           ));
         };
         // -------------------------------------------------------------------- create DOM
@@ -511,14 +519,13 @@
         const quoted = (idx) =>
           `${idx + 1} of ${quotes.length}<br><br>` +
           quotes[(current = idx)].replace("--", "<br><br>-- ");
-        const start = () => (interval = setInterval(() => next(), 7e3));
+        const start = (time = 1e3) =>
+          (interval = setInterval(() => next(), Math.max(2e3, time)));
         const next = () => {
-          this.div.innerHTML = quoted((current + 1) % quotes.length);
-          // requestAnimationFrame(() => {
-          //   this.animdiv.style.width = "0";
-          //   this.animdiv.style.animation = "";
-          //   this.animdiv.style.animation = "grow 7s forwards";
-          // });
+          clearInterval(interval);
+          let text = quoted((current + 1) % quotes.length);
+          start(text.length * 60);
+          this.div.innerHTML = text;
         };
         // -------------------------------------------------------------------------- create HTML
         const createElement = (tag, props = {}) =>
@@ -527,18 +534,11 @@
         this.attachShadow({ mode: "open" }).append(
           createElement("style", {
             textContent:
-              `:host{display:block;position:fixed;bottom:10px;left:10px;max-width:300px;` +
+              `:host{display:block;position:fixed;bottom:${UIpadding}px;left:${UIpadding}px;max-width:300px;` +
               `background:var(--quotebackground,beige);color:black;opacity:0.75;` +
-              `padding:10px;border-radius:5px;border:1px solid darkred;` +
+              `padding:${UIpadding}px;border-radius:5px;border:1px solid darkred;` +
               `text-align:left;font:18px Arial}`,
           }),
-          // (this.animdiv = createElement("div", {
-          //   style: "height:2px;background:red;animation:grow 7s forwards",
-          //   textContent: " ",
-          // })),
-          // (this.anim = createElement("style", {
-          //   textContent: `@keyframes grow {from{width:0}to{width:100%}}`,
-          // })),
           (this.div = createElement("div", {
             innerHTML: quoted(0),
           }))
