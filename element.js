@@ -400,6 +400,8 @@
       #count = 0;
       #label = "";
       connectedCallback() {
+        if (getUrlParam("counters") == "no") return;
+
         this.attachShadow({ mode: "open" }).append(
           createSTYLEElement(
             `:host{position:fixed;z-index:999;opacity:.7;` +
@@ -441,7 +443,7 @@
         return this.div.textContent;
       }
       set label(str) {
-        this.div.textContent = (this.labelPrefix || "") + str;
+        if (this.div) this.div.textContent = (this.labelPrefix || "") + str;
       }
     } // class CounterDisplay
   ); // customElements.define("counter-display")
@@ -534,6 +536,8 @@
           // "What's wrong with being a snowflake? I think if you're calling someone a snowflake that just means you've been upset by something they're saying. We're all vulnerable, get over it.--Mura Masa",
           "I want people to know their palate is a snowflake. We all like different things. Why should we all have the same taste in wines?--Gary Vaynerchuk",
         ];
+        //---
+        if (getUrlParam("quotes") == "no") return;
         // -------------------------------------------------------------------------- init
         let current;
         let interval;
