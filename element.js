@@ -4,8 +4,19 @@
   // IIFE so self-contained source can be copied into any other code
 
   // -------------------------------------------------------------------------- getUrlParam( param )
-  const getUrlParam = (param) =>
-    new URLSearchParams(window.location.search).get(param);
+  const getUrlParam = (param) => {
+    // extract parameter from URL
+    let value = new URLSearchParams(window.location.search).get(param);
+    if (value) return value;
+    // extract parameter from <script src=""> URL
+    if (document.currentScript === null) return null;
+    const srcParams = new URLSearchParams(
+      document.currentScript.src.split("?")[1]
+    );
+    value = srcParams.get(param);
+    console.error(param, value);
+    return value;
+  };
 
   // ************************************************************************** configuration
   let LOG = getUrlParam("log") == "1";
@@ -339,19 +350,37 @@
           createElement("frames-per-second", { id: "FPS" }),
           (this.flakecounter = createCountElement(
             "<snow-flake> Web Components : ",
-            8 * UIpadding
+            42
           )),
           (this.addflakecounter = createCountElement(
             "new <snow-flake> per second: ",
-            15 * UIpadding
+            77
           )),
+          (this.navigatormemorycounter = createCountElement(
+            "Device Memory: ",
+            112
+          )),
+          (this.memorycounter = createCountElement("Memory: ", 148)),
+          // add quotes text in bottom left
           quotes
         );
+
         // --------------------------------------------------------------------
         // generate snowflakes on request
         document.addEventListener(_WC_MAKEITSNOW_, (evt) => {
-          this.flakecounter.label = snowflakesCounter;
-          this.addflakecounter.label = addflakeCounter;
+          // data
+          if (!this.lastUpdateTime || Date.now() - this.lastUpdateTime >= 500) {
+            this.flakecounter.label = snowflakesCounter;
+            this.addflakecounter.label = addflakeCounter;
+            this.memorycounter.label = `${(
+              performance.memory.usedJSHeapSize / 1e6
+            ).toFixed(2)} MB`;
+            this.navigatormemorycounter.label = `${(
+              navigator.deviceMemory / 1e6
+            ).toFixed(2)} MB`;
+            this.lastUpdateTime = Date.now();
+          }
+
           const flake = document.createElement(_WC_SNOWFLAKE_);
           //flake.setAttribute("x", Math.random() * 100);
           //flake.setAttribute("y", 0);
@@ -363,7 +392,7 @@
         for (let i = 0; i < _STARTFLAKECOUNT_; i++) {
           setTimeout(() => {
             document.dispatchEvent(new CustomEvent(_WC_MAKEITSNOW_));
-          }, (i * 2e3) / _STARTFLAKECOUNT_);
+          }, (i * 4e3) / _STARTFLAKECOUNT_);
         }
       }
       // ======================================================================
@@ -382,6 +411,7 @@
         this.attachShadow({ mode: "open" }).append(
           createSTYLEElement(
             `:host{position:fixed;z-index:999;opacity:.7;` +
+              `display:var(--snow-ui-display, inherit);` +
               `top:${this.top || UIpadding}px;left:${UIpadding}px;` +
               `background:#000;color:#fff;` +
               `padding:5px;border-radius:5px;` +
@@ -436,7 +466,7 @@
         // -------------------------------------------------------------------- create FPS counter
         const createFPSCounter = () => {
           return (counterElement = createCountElement(
-            `animation FPS (threshold:${_FPS_threshold_}) : `,
+            `animation FPS (threshold:${_FPS_threshold_} ⬆️⬇️) : `,
             UIpadding
           ));
         };
@@ -534,7 +564,7 @@
         this.attachShadow({ mode: "open" }).append(
           createElement("style", {
             textContent:
-              `:host{display:block;position:fixed;bottom:${UIpadding}px;left:${UIpadding}px;max-width:300px;` +
+              `:host{display:var(--snow-ui-display, block);position:fixed;bottom:${UIpadding}px;left:${UIpadding}px;max-width:300px;` +
               `background:var(--quotebackground,beige);color:black;opacity:0.75;` +
               `padding:${UIpadding}px;border-radius:5px;border:1px solid darkred;` +
               `text-align:left;font:18px Arial}`,

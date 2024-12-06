@@ -6,14 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="A fun web page that demonstrates a 'make it snow' effect using web components.">
     <title>Make it snow</title>
-    <script src="element.js"></script>
+    <script src="element.js?flakecount=10"></script>
     <style>
         :root {
             /* yes document CSS properties can style <snow-flake> too */
-            /* --size: 5; */
+            /* --size: 2; */
             /* --color: gold; */
-            /* --speed: 1; */
+            /* --speed: 10; */
             /* --spikecount: 6; */
+            /* --snow-ui-display: none; */
         }
 
         body {
@@ -28,7 +29,7 @@
 
         h1,
         h2 {
-            display: block;
+            display: var(--snow-ui-display, block);
             z-index: 99999;
             position: relative;
             text-shadow: 2px 2px 4px #000, -2px -2px 4px #fff;
