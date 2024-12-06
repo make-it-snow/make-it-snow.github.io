@@ -14,9 +14,16 @@
       document.currentScript.src.split("?")[1]
     );
     value = srcParams.get(param);
-    console.error(param, value);
+    // console.error(param, value);
     return value;
   };
+  // -------------------------------------------------------------------------- log( ...args )
+  const log = (...args) =>
+    console.log(
+      `%c ${args.shift()} `,
+      "background:gold;font-size:1.3em",
+      ...args
+    );
 
   // ************************************************************************** configuration
   let LOG = getUrlParam("log") == "1";
@@ -220,12 +227,14 @@
             .join("") +
           // -------------------------------------------------------------------- end of SVG
           `</svg>`;
-
+        // -------------------------------------------------------------------- freeze the snowflake??
+        this.frozenflake =
+          this.hasAttribute("freeze") || this.getAttributeUrl("freeze");
         // -------------------------------------------------------------------- position the snowflake
         // initial position
         this.position();
         // -------------------------------------------------------------------- animate the snowflake
-        if (!this.hasAttribute("freeze")) this.animate({});
+        if (!this.frozenflake) this.animate({});
         this.onanimationend = (evt) => {
           // snowflake reached bottom of screen
           this.remove(); // triggers disconnectedCallback
@@ -240,6 +249,10 @@
       // hardcode x,y and color to show a snowflake at a specific position
       // animation position is NOT done with this function
       position(x = this.x, y = this.y, color = this.color) {
+        if (this.getAttributeUrl("randomxy")) {
+          x = random(0, 100);
+          y = random(0, 100);
+        }
         this.x = x;
         this.y = y;
         this.shadowRoot.querySelector("#style").innerHTML =
@@ -368,8 +381,11 @@
         // --------------------------------------------------------------------
         // generate snowflakes on request
         document.addEventListener(_WC_MAKEITSNOW_, (evt) => {
-          // data
-          if (!this.lastUpdateTime || Date.now() - this.lastUpdateTime >= 500) {
+          // data update only every second
+          if (
+            !this.lastUpdateTime ||
+            Date.now() - this.lastUpdateTime >= 1000
+          ) {
             this.flakecounter.label = snowflakesCounter;
             this.addflakecounter.label = addflakeCounter;
             this.memorycounter.label = `${(
@@ -592,9 +608,9 @@
   const requestWakeLock = async () => {
     try {
       wakeLock = await navigator.wakeLock.request("screen");
-      console.log("Wake Lock is active");
+      log(`Wake Lock is active`);
       wakeLock.addEventListener("release", () => {
-        console.log("Wake Lock was released");
+        log("Wake Lock was released");
       });
     } catch (err) {
       if (LOG) console.error(`${err.name}, ${err.message}`);
