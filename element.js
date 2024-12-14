@@ -168,6 +168,7 @@
         this.shadowRoot.innerHTML =
           `<style>` +
           `:host{display:inline-block;position:absolute}` +
+          `:host{will-change:transform}` +
           `:host{--size:var(--flakesize,${this.size}%);width:var(--size)}` +
           // CSS for SVG
           `svg{width:100%;vertical-align:top}` +
@@ -345,11 +346,13 @@
             "new <snow-flake> per second: ",
             77
           )),
-          (this.navigatormemorycounter = createCountElement(
-            "Device Memory: ",
-            112
-          )),
-          (this.memorycounter = createCountElement("Memory: ", 148)),
+          //probably does not work on Safari / Firefox
+          // (this.navigatormemorycounter = createCountElement(
+          //   "Device Memory: ",
+          //   112
+          // )),
+          // (this.memorycounter = createCountElement("Memory: ", 148)),
+
           // add quotes text in bottom left
           quotes
         );
@@ -364,12 +367,13 @@
           ) {
             this.flakecounter.label = snowflakesCounter;
             this.addflakecounter.label = addflakeCounter;
-            this.memorycounter.label = `${(
-              performance.memory.usedJSHeapSize / 1e6
-            ).toFixed(2)} MB`;
-            this.navigatormemorycounter.label = `${(
-              navigator.deviceMemory / 1e6
-            ).toFixed(2)} MB`;
+            // not in firefox safari?!
+            // this.memorycounter.label = `${(
+            //   performance?.memory?.usedJSHeapSize / 1e6
+            // ).toFixed(2)} MB`;
+            // this.navigatormemorycounter.label = `${(
+            //   navigator.deviceMemory / 1e6
+            // ).toFixed(2)} MB`;
             this.lastUpdateTime = Date.now();
           }
 
