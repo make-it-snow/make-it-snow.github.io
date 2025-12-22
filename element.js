@@ -343,7 +343,7 @@
         document.body.append(
           createElement("frames-per-second", { id: "FPS" }),
           (this.flakecounter = createCountElement(
-            "<snow-flake> Web Components : ",
+            "total <snow-flake> Web Components : ",
             pos + 0 * height
           )),
           (this.addflakecounter = createCountElement(
@@ -363,7 +363,8 @@
         if (performance?.memory) {
           setInterval(() => {
             const { usedJSHeapSize, totalJSHeapSize } = performance.memory;
-            const str = ('heap MB ' + (usedJSHeapSize / 1e6).toFixed(2) + ' / ' + (totalJSHeapSize / 1e6).toFixed(2));
+            let str = ('heap MB ' + (usedJSHeapSize / 1e6).toFixed(2) + ' / ' + (totalJSHeapSize / 1e6).toFixed(2));
+            if (useAdoptedStyleSheets) str = "(adoptedstylesheet) " + str;
             this.memoryusage.shadowRoot.querySelector('div').textContent = str;
           }, 1000);
         }
@@ -474,7 +475,7 @@
         // -------------------------------------------------------------------- create FPS counter
         const createFPSCounter = () => {
           return (counterElement = createCountElement(
-            `animation FPS (threshold:${_FPS_threshold_} ⬆️⬇️) : `,
+            `animation FPS (threshold:${_FPS_threshold_} ⬆️⬇️ keys) : `,
             UIpadding
           ));
         };
