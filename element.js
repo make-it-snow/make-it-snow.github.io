@@ -19,11 +19,7 @@
   };
   // -------------------------------------------------------------------------- log( ...args )
   const log = (...args) =>
-    console.log(
-      `%c ${args.shift()} `,
-      "background:gold;font-size:1.3em",
-      ...args
-    );
+    console.log(`%c ${args.shift()} `, "background:gold;color:black", ...args);
 
   // ************************************************************************** configuration
   let LOG = getUrlParam("log") == "1";
@@ -87,10 +83,80 @@
     else return Math.random() * (max - min) + min;
   };
 
+  //! every snowflake is unique so there isn't much CSS to be shared:
+  const HOSTCSS_1 =
+    `:host{display:inline-block;position:absolute;will-change:transform;--size:var(--flakesize,5%);width:var(--size)}`
+    + `svg{width:100%;vertical-align:top}`;
+  const snowflakeBaseSheet = new CSSStyleSheet();
+  snowflakeBaseSheet.replaceSync(HOSTCSS_1);
+
+  const useAdoptedStyleSheets = getUrlParam("adopted") || false;
+  log("adopted (stylesheet):", useAdoptedStyleSheets);
   // ************************************************************************** <snow-flake>
   customElements.define(
     _WC_SNOWFLAKE_,
     class extends HTMLElement {
+      // ====================================================================== connectedCallback()
+      connectedCallback() {
+        this.attachShadow({ mode: "open" });
+        if (useAdoptedStyleSheets) {
+          this.shadowRoot.adoptedStyleSheets = [snowflakeBaseSheet];
+        }
+        if (LOG)
+          console.log(
+            `%c new <${_WC_SNOWFLAKE_}> `,
+            "background:gold",
+            snowflakesCounter
+          );
+        let spikecount = this.getAttributeUrl("spikecount") || random([4, 6, 8]);
+        //---------------------------------------------------------------------- create HTML
+        this.shadowRoot.innerHTML =
+          (useAdoptedStyleSheets ? `` : `<style>${HOSTCSS_1}</style>`) +
+          // ---------------------------------------------------- create styles PER snow-flake
+          // style declaration for the unique snowflake
+          `<style id=animation><!--animation CSS injected here--></style>` +
+          `<style id=style><!--initial state injected here--></style>` +
+          // ---------------------------------------------------- create SVG
+          // <svg> element with ice crystal
+          // create an SVG ice crystal with random shapes
+          `<svg part=crystal viewBox="0 0 140 140">` +
+          // one <g> with random rotation at 70,70 center
+          `<g id="spike" transform="rotate(${this.rotate} 70 70)" fill=none stroke-linecap=round >` +
+          // create 3 paths making one of 6 crystal spikes
+          // with random opacity and stroke-width
+          // -------------------------------------------------------------------- create 3 spike <path>
+          ["M70 70v-60", "M45 28l25 18l28-16", "M50 11l20 20l20-20"]
+            .map((dpath) => {
+              let strokewidth = random(3, 9);
+              let pathopacity = random(0.2, 1);
+              return `<path opacity="${pathopacity}" stroke-width="${strokewidth}" d="${dpath}"/>`;
+            })
+            .join("") +
+          `</g>` +
+          // -------------------------------------------------------------------- create 5 more spikes
+          // rotate the crystal spike 5 times to create a snowflake
+          Array(spikecount - 1) // from random([4,6,8])
+            .fill(360 / spikecount) // calculate degrees offset for each spike
+            .map((degrees, idx) => {
+              let spikerotation = (idx + 1) * degrees; // all spikes make up a snowflake
+              // every snowflake is in shadowDOM, so its save to reference ID values
+              return `<use href=#spike transform="rotate(${spikerotation} 70 70)"/>`;
+            })
+            .join("") +
+          // -------------------------------------------------------------------- end of SVG
+          `</svg>`;
+        // -------------------------------------------------------------------- freeze the snowflake??
+        this.frozenflake = this.hasAttribute("freeze") || this.getAttributeUrl("freeze");
+        // -------------------------------------------------------------------- position the snowflake
+        // initial position
+        this.position();
+        // -------------------------------------------------------------------- animate the snowflake
+        if (!this.frozenflake) this.animate({});
+        this.onanimationend = (evt) => {
+          // snowflake reached bottom of screen
+          this.remove(); // triggers disconnectedCallback
+        };
+      }
       // ======================================================================
       // Getters and Setters, setters not really used in this code
       getAttributeUrl(attr) {
@@ -152,70 +218,6 @@
       }
       set rotate(value) {
         this.setAttribute("rotate", value);
-      }
-      // ====================================================================== connectedCallback()
-      connectedCallback() {
-        this.attachShadow({ mode: "open" });
-        if (LOG)
-          console.log(
-            `%c new <${_WC_SNOWFLAKE_}> `,
-            "background:gold",
-            snowflakesCounter
-          );
-        let spikecount =
-          this.getAttributeUrl("spikecount") || random([4, 6, 8]);
-        //---------------------------------------------------------------------- create HTML
-        this.shadowRoot.innerHTML =
-          `<style>` +
-          `:host{display:inline-block;position:absolute}` +
-          `:host{will-change:transform}` +
-          `:host{--size:var(--flakesize,${this.size}%);width:var(--size)}` +
-          // CSS for SVG
-          `svg{width:100%;vertical-align:top}` +
-          `</style>` +
-          // style declaration for the snowflake
-          `<style id=animation><!--animation CSS injected here--></style>` +
-          `<style id=style><!--initial state injected here--></style>` +
-          // <svg> element with ice crystal
-          // create an SVG ice crystal with random shapes
-          `<svg part=crystal viewBox="0 0 140 140">` +
-          // one <g> with random rotation at 70,70 center
-          `<g id="spike" transform="rotate(${this.rotate} 70 70)" fill=none stroke-linecap=round >` +
-          // create 3 paths making one of 6 crystal spikes
-          // with random opacity and stroke-width
-          // -------------------------------------------------------------------- create 3 spike <path>
-          ["M70 70v-60", "M45 28l25 18l28-16", "M50 11l20 20l20-20"]
-            .map((dpath) => {
-              let strokewidth = random(3, 9);
-              let pathopacity = random(0.2, 1);
-              return `<path opacity="${pathopacity}" stroke-width="${strokewidth}" d="${dpath}"/>`;
-            })
-            .join("") +
-          `</g>` +
-          // -------------------------------------------------------------------- create 5 more spikes
-          // rotate the crystal spike 5 times to create a snowflake
-          Array(spikecount - 1) // from random([4,6,8])
-            .fill(360 / spikecount) // calculate degrees offset for each spike
-            .map((degrees, idx) => {
-              let spikerotation = (idx + 1) * degrees; // all spikes make up a snowflake
-              // every snowflake is in shadowDOM, so its save to reference ID values
-              return `<use href=#spike transform="rotate(${spikerotation} 70 70)"/>`;
-            })
-            .join("") +
-          // -------------------------------------------------------------------- end of SVG
-          `</svg>`;
-        // -------------------------------------------------------------------- freeze the snowflake??
-        this.frozenflake =
-          this.hasAttribute("freeze") || this.getAttributeUrl("freeze");
-        // -------------------------------------------------------------------- position the snowflake
-        // initial position
-        this.position();
-        // -------------------------------------------------------------------- animate the snowflake
-        if (!this.frozenflake) this.animate({});
-        this.onanimationend = (evt) => {
-          // snowflake reached bottom of screen
-          this.remove(); // triggers disconnectedCallback
-        };
       }
       // ====================================================================== disconnectedCallback()
       disconnectedCallback() {
@@ -329,34 +331,42 @@
       renderonce() {
         // --------------------------------------------------------------------
         // make sure this function is only called once, yes, a semaphore could have been used
-        this.renderonce = () => {};
+        this.renderonce = () => { };
         // --------------------------------------------------------------------
         let quotes =
           getUrlParam("ui") == "no"
             ? createElement("span") // empty span
             : createElement("snowflake-quotes");
         // --------------------------------------------------------------------
+        let pos = 42;
+        let height = 35;
         document.body.append(
           createElement("frames-per-second", { id: "FPS" }),
           (this.flakecounter = createCountElement(
             "<snow-flake> Web Components : ",
-            42
+            pos + 0 * height
           )),
           (this.addflakecounter = createCountElement(
             "new <snow-flake> per second: ",
-            77
+            pos + 1 * height
           )),
-          //probably does not work on Safari / Firefox
-          // (this.navigatormemorycounter = createCountElement(
-          //   "Device Memory: ",
-          //   112
-          // )),
-          // (this.memorycounter = createCountElement("Memory: ", 148)),
+          //!probably does not work on Safari / Firefox
+          (this.memoryusage = createCountElement(
+            "memory...",
+            pos + 2 * height
+          )),
 
           // add quotes text in bottom left
           quotes
         );
-
+        // --------------------------------------------------------------------
+        if (performance?.memory) {
+          setInterval(() => {
+            const { usedJSHeapSize, totalJSHeapSize } = performance.memory;
+            const str = ('heap MB ' + (usedJSHeapSize / 1e6).toFixed(2) + ' / ' + (totalJSHeapSize / 1e6).toFixed(2));
+            this.memoryusage.shadowRoot.querySelector('div').textContent = str;
+          }, 1000);
+        }
         // --------------------------------------------------------------------
         // generate snowflakes on request
         document.addEventListener(_WC_MAKEITSNOW_, (evt) => {
@@ -409,11 +419,11 @@
         this.attachShadow({ mode: "open" }).append(
           createSTYLEElement(
             `:host{position:fixed;z-index:999;opacity:.7;` +
-              `display:var(--snow-ui-display, inherit);` +
-              `top:${this.top || UIpadding}px;left:${UIpadding}px;` +
-              `background:#000;color:#fff;` +
-              `padding:5px;border-radius:5px;` +
-              `font:18px arial}`
+            `display:var(--snow-ui-display, inherit);` +
+            `top:${this.top || UIpadding}px;left:${UIpadding}px;` +
+            `background:#000;color:#fff;` +
+            `padding:5px;border-radius:5px;` +
+            `font:18px arial}`
           ),
           (this.div = createElement("div", {
             part: "div",
