@@ -245,7 +245,8 @@
       // ====================================================================== get/set for animation
       // ---------------------------------------------------------------------- get speed()
       get animspeed() {
-        return ~~(this.getAttributeUrl("speed") || random(4, 12)); // seconds
+        let speed = ~~(this.getAttributeUrl("speed") || random(12, 24)); // seconds
+        return speed * 4;
       }
       // ---------------------------------------------------------------------- get drift()
       get drift() {
